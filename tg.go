@@ -4,46 +4,62 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func main() {
-	zodiakSign := "Рыбы"
-	urlLink := "https://kirov-portal.ru/news/poslednie-novosti/znak-zodiaka-kotoromu-4-sentyabrya-stoit-doveritsya-sudbe-31855/"
+	var zodiakSigns = []string{
+		"Овен",
+		"Телец",
+		"Близнецы",
+		"Рак",
+		"Лев",
+		"Дева",
+		"Весы",
+		"Скорпион",
+		"Стрелец",
+		"Козерог",
+		"Водолей",
+		"Рыбы",
+	}
+	zodiacSign := zodiakSigns[7]
+	links := getLinks()
 
-	htmlDOM := getHTML(urlLink)
-	zodiakForecast := zodiakForecast(zodiakSign, string(htmlDOM))
-	fmt.Println(strings.TrimSpace(zodiakForecast))
+	resp, _ := http.Get(links[0])
+	defer resp.Body.Close()
+	r, _ := io.ReadAll(resp.Body)
+	fmt.Println(strings.SplitAfterN(string(r), zodiacSign, -1)[1])
+	// form := fmt.Sprintf("%s(.*?</0-9>\n)", zodiacSign)
 
+	// re, _ := regexp.Compile(form)
+	// fmt.Println(re.FindString(string(r)))
 }
 
-func getHTML(urlLink string) string {
-	resp, err := http.Get(urlLink)
-	if err != nil {
-		fmt.Println("Соединение с сайтом отсутствует.")
-		os.Exit(0)
-	}
+func getLinks() []string {
+	links := []string{}
+	now := time.Now()
+	var date string = fmt.Sprintf("%d+%s+%d", now.Year(), now.Month(), now.Day())
+	googleUrl := fmt.Sprint("https://www.google.com/search?q=%D0%B3%D0%BE%D1%80%D0%BE%D1%81%D0%BA%D0%BE%D0%BF+")
+	googleUrll := fmt.Sprint("&oq=%D0%B3%D0%BE%D1%80%D0%BE%D1%81%D0%BA%D0%BE%D0%BF+02+09+2022&aqs=chrome..69i57j0i546l5.17391j0j7&sourceid=chrome&ie=UTF-8")
+	urlAddr := fmt.Sprintf("%s%s%s", googleUrl, date, googleUrll)
 
-	htmlDOM, err := io.ReadAll(resp.Body)
+	resp, err := http.Get(urlAddr)
 	if err != nil {
-		fmt.Println("Не удалось открыть информацию с сайта.")
-		os.Exit(0)
+		fmt.Println(err)
 	}
 	defer resp.Body.Close()
 
-	return string(htmlDOM)
-}
-
-func zodiakForecast(zodiakSign, htmlDOM string) string {
-	zodiakCompile := regexp.MustCompile(fmt.Sprintf("%s(.*\\s)(.*\\s)(.*)", zodiakSign))
-	tagCompile := regexp.MustCompile("<(.*?)>")
-	cleanCompile := regexp.MustCompile("&nbsp;")
-
-	zodiakSplit := zodiakCompile.FindString(string(htmlDOM))
-	tagRemove := tagCompile.ReplaceAllString(zodiakSplit, "\n")
-	zodiakForecast := cleanCompile.ReplaceAllString(tagRemove, "")
-	return zodiakForecast
-	//
+	r, _ := io.ReadAll(resp.Body)
+	re, _ := regexp.Compile("<a href=\"/url(.*?)\"")
+	a := re.FindAllString(string(r), -1)
+	re, _ = regexp.Compile("https://(.*?)&")
+	for _, i := range a {
+		linkFormat := re.FindString(i)
+		if !strings.Contains(linkFormat, "google") {
+			links = append(links, strings.SplitN(linkFormat, "&", -1)[0])
+		}
+	}
+	return links
 }
