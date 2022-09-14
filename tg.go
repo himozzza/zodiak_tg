@@ -3,38 +3,88 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func main() {
-	var zodiakSigns = []string{
-		"Овен",
-		"Телец",
-		"Близнецы",
-		"Рак",
-		"Лев",
-		"Дева",
-		"Весы",
-		"Скорпион",
-		"Стрелец",
-		"Козерог",
-		"Водолей",
-		"Рыбы",
+	// var zodiakSigns = []string{
+	// 	"Овен",
+	// 	"Телец",
+	// 	"Близнецы",
+	// 	"Рак",
+	// 	"Лев",
+	// 	"Дева",
+	// 	"Весы",
+	// 	"Скорпион",
+	// 	"Стрелец",
+	// 	"Козерог",
+	// 	"Водолей",
+	// 	"Рыбы",
+	// }
+	bot, err := tgbotapi.NewBotAPI("507849468:AAFpYe6fbKFFGU7qmbasK58PcqrQpRySqYE")
+	if err != nil {
+		log.Panic(err)
 	}
-	zodiacSign := zodiakSigns[7]
-	links := getLinks()
 
-	resp, _ := http.Get(links[0])
-	defer resp.Body.Close()
-	r, _ := io.ReadAll(resp.Body)
-	fmt.Println(strings.SplitAfterN(string(r), zodiacSign, -1)[1])
-	// form := fmt.Sprintf("%s(.*?</0-9>\n)", zodiacSign)
+	bot.Debug = true
 
-	// re, _ := regexp.Compile(form)
-	// fmt.Println(re.FindString(string(r)))
+	// log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	updates := bot.GetUpdatesChan(u)
+
+	for update := range updates {
+		if update.Message != nil {
+			// log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+			msg.ReplyToMessageID = update.Message.MessageID
+			zodiacSign := update.Message.Text
+			links := getLinks()
+			b := calc(links, zodiacSign)
+			fmt.Println(b)
+			fmt.Println(update.Message.Text)
+			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, b))
+		}
+	}
+}
+
+func calc(links []string, zodiacSign string) string {
+	u := 0
+	var b string
+	for _, i := range links {
+		resp, err := http.Get(i)
+		if err != nil {
+			fmt.Println("Не удалось загрузить страницу.")
+		}
+		defer resp.Body.Close()
+		r, _ := io.ReadAll(resp.Body)
+		form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiacSign)
+		re, _ := regexp.Compile(form)
+		a := re.FindString(string(r))
+		if strings.Contains(a, zodiacSign) {
+			u++
+			re := regexp.MustCompile(`[a-z/<>0-9;&]+`)
+			b := re.ReplaceAllString(a, " ")
+			if len(b) < 146 {
+				continue
+			}
+			return b
+			fmt.Printf("\n\n\n\n\n\n\n\n\n")
+			if u == 5 {
+				break
+			}
+		}
+	}
+	return b
 }
 
 func getLinks() []string {
