@@ -13,20 +13,29 @@ import (
 )
 
 func main() {
-	// var zodiakSigns = []string{
-	// 	"Овен",
-	// 	"Телец",
-	// 	"Близнецы",
-	// 	"Рак",
-	// 	"Лев",
-	// 	"Дева",
-	// 	"Весы",
-	// 	"Скорпион",
-	// 	"Стрелец",
-	// 	"Козерог",
-	// 	"Водолей",
-	// 	"Рыбы",
-	// }
+	var zodiakSigns = []string{
+		"Овен",
+		"Овны",
+		"Телец",
+		"Тельцы",
+		"Близнецы",
+		"Рак",
+		"Лев",
+		"Львы",
+		"Дева",
+		"Девы",
+		"Весы",
+		"Скорпион",
+		"Скорпионы",
+		"Стрелец",
+		"Стрельцы",
+		"Козерог",
+		"Козероги",
+		"Водолей",
+		"Водолеи",
+		"Рыба",
+		"Рыбы",
+	}
 	bot, err := tgbotapi.NewBotAPI("507849468:AAFpYe6fbKFFGU7qmbasK58PcqrQpRySqYE")
 	if err != nil {
 		log.Panic(err)
@@ -47,41 +56,46 @@ func main() {
 
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 			msg.ReplyToMessageID = update.Message.MessageID
-			zodiacSign := update.Message.Text
-			links := getLinks()
-			b := calc(links, zodiacSign)
-			fmt.Println(b)
-			fmt.Println(update.Message.Text)
-			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, b))
+			zodiakSign := update.Message.Text
+			for _, i := range zodiakSigns {
+				if strings.Contains(i, zodiakSign) {
+					links := getLinks()
+
+					b := calc(links, zodiakSign)
+
+					b = formatText(b)
+					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, b))
+				}
+			}
 		}
 	}
+
 }
 
-func calc(links []string, zodiacSign string) string {
+func calc(links []string, zodiakSign string) string {
+
 	u := 0
 	var b string
 	for _, i := range links {
+		if u == 50 {
+			break
+		}
 		resp, err := http.Get(i)
 		if err != nil {
 			fmt.Println("Не удалось загрузить страницу.")
+			continue
 		}
 		defer resp.Body.Close()
+
 		r, _ := io.ReadAll(resp.Body)
-		form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiacSign)
+		form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiakSign)
 		re, _ := regexp.Compile(form)
 		a := re.FindString(string(r))
-		if strings.Contains(a, zodiacSign) {
+		if strings.Contains(a, zodiakSign) {
 			u++
 			re := regexp.MustCompile(`[a-z/<>0-9;&]+`)
 			b := re.ReplaceAllString(a, " ")
-			if len(b) < 146 {
-				continue
-			}
 			return b
-			fmt.Printf("\n\n\n\n\n\n\n\n\n")
-			if u == 5 {
-				break
-			}
 		}
 	}
 	return b
@@ -112,4 +126,11 @@ func getLinks() []string {
 		}
 	}
 	return links
+}
+
+func formatText(b string) string {
+	re := regexp.MustCompile(`\s `)
+	b = re.ReplaceAllString(b, "\n")
+	re = regexp.MustCompile(`[a-zA-Z-!]`)
+	return re.ReplaceAllString(b, "")
 }
