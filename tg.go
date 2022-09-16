@@ -15,25 +15,16 @@ import (
 func main() {
 	var zodiakSigns = []string{
 		"Овен",
-		"Овны",
 		"Телец",
-		"Тельцы",
 		"Близнецы",
 		"Рак",
 		"Лев",
-		"Львы",
 		"Дева",
-		"Девы",
 		"Весы",
 		"Скорпион",
-		"Скорпионы",
 		"Стрелец",
-		"Стрельцы",
 		"Козерог",
-		"Козероги",
 		"Водолей",
-		"Водолеи",
-		"Рыба",
 		"Рыбы",
 	}
 	bot, err := tgbotapi.NewBotAPI("507849468:AAFpYe6fbKFFGU7qmbasK58PcqrQpRySqYE")
@@ -62,7 +53,7 @@ func main() {
 					links := getLinks()
 
 					b := calc(links, zodiakSign)
-
+					fmt.Println(b)
 					b = formatText(b)
 					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, b))
 				}
@@ -88,15 +79,11 @@ func calc(links []string, zodiakSign string) string {
 		defer resp.Body.Close()
 
 		r, _ := io.ReadAll(resp.Body)
-		form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiakSign)
+		// form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiakSign)
+		form := fmt.Sprintf("%s(.*)+\\s(.*)+\\s", zodiakSign)
 		re, _ := regexp.Compile(form)
-		a := re.FindString(string(r))
-		if strings.Contains(a, zodiakSign) {
-			u++
-			re := regexp.MustCompile(`[a-z/<>0-9;&]+`)
-			b := re.ReplaceAllString(a, " ")
-			return b
-		}
+		b := re.FindString(string(r))
+		return b
 	}
 	return b
 }
@@ -129,8 +116,13 @@ func getLinks() []string {
 }
 
 func formatText(b string) string {
-	re := regexp.MustCompile(`\s `)
-	b = re.ReplaceAllString(b, "\n")
-	re = regexp.MustCompile(`[a-zA-Z-!]`)
-	return re.ReplaceAllString(b, "")
+	re := regexp.MustCompile(`&nbsp;`)
+	b = re.ReplaceAllString(b, " ")
+	re = regexp.MustCompile(`[<>a-zA-Z0-9]`)
+	b = re.ReplaceAllString(b, "")
+	b = strings.Replace(b, "/", "", 1)
+	b = strings.TrimRight(b, "/\n")
+	fmt.Println(b)
+	return b
+
 }
