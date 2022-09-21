@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -53,7 +54,11 @@ func main() {
 				forecasts[n] = <-c
 			}
 			wg.Wait()
-			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, forecasts[zodiakSign]))
+			if strings.Contains(forecasts[zodiakSign], "Фатальная ошибка!") {
+				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось подключиться к серверу.\nПопробуйте позже."))
+			} else {
+				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, forecasts[zodiakSign]))
+			}
 		}
 	}
 }
@@ -62,6 +67,8 @@ func getForecast(n, i string, c chan string, wg *sync.WaitGroup) {
 	resp, err := http.Get(fmt.Sprintf("https://horo.mail.ru/prediction/%s/today/", i))
 	if err != nil {
 		fmt.Println("Не удалось подключиться к серверу.", err)
+		c <- "Фатальная ошибка!"
+		wg.Done()
 	}
 
 	html, _ := io.ReadAll(resp.Body)
