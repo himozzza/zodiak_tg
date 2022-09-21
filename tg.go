@@ -6,41 +6,38 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strings"
+	"sync"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func main() {
-	var zodiakSigns = []string{
-		"Овен",
-		"Телец",
-		"Близнецы",
-		"Рак",
-		"Лев",
-		"Дева",
-		"Весы",
-		"Скорпион",
-		"Стрелец",
-		"Козерог",
-		"Водолей",
-		"Рыбы",
-	}
 	bot, err := tgbotapi.NewBotAPI("507849468:AAFpYe6fbKFFGU7qmbasK58PcqrQpRySqYE")
 	if err != nil {
 		log.Panic(err)
 	}
-
-	bot.Debug = true
-
-	// log.Printf("Authorized on account %s", bot.Self.UserName)
-
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
+	var zodiakSigns = map[string]string{
+		"Овен":     "aries",
+		"Телец":    "taurus",
+		"Близнецы": "gemini",
+		"Рак":      "cancer",
+		"Лев":      "leo",
+		"Дева":     "virgo",
+		"Весы":     "libra",
+		"Скорпион": "scorpio",
+		"Стрелец":  "sagittarius",
+		"Козерог":  "capricorn",
+		"Водолей":  "aquarius",
+		"Рыбы":     "pisces",
+	}
+	forecasts := make(map[string]string)
 	updates := bot.GetUpdatesChan(u)
-
+	c := make(chan string)
+	var wg sync.WaitGroup
 	for update := range updates {
 		if update.Message != nil {
 			// log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -48,81 +45,30 @@ func main() {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 			msg.ReplyToMessageID = update.Message.MessageID
 			zodiakSign := update.Message.Text
-			for _, i := range zodiakSigns {
-				if strings.Contains(i, zodiakSign) {
-					links := getLinks()
 
-					b := calc(links, zodiakSign)
-					fmt.Println(b)
-					b = formatText(b)
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, b))
-				}
+			for n, i := range zodiakSigns {
+				wg.Add(1)
+				go getForecast(n, i, c, &wg)
+				time.Sleep(10 * time.Millisecond)
+				forecasts[n] = <-c
 			}
+			wg.Wait()
+			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, forecasts[zodiakSign]))
 		}
 	}
-
 }
 
-func calc(links []string, zodiakSign string) string {
-
-	u := 0
-	var b string
-	for _, i := range links {
-		if u == 50 {
-			break
-		}
-		resp, err := http.Get(i)
-		if err != nil {
-			fmt.Println("Не удалось загрузить страницу.")
-			continue
-		}
-		defer resp.Body.Close()
-
-		r, _ := io.ReadAll(resp.Body)
-		// form := fmt.Sprintf("%s[\\w\\d</>\\s]*(.*)", zodiakSign)
-		form := fmt.Sprintf("%s(.*)+\\s(.*)+\\s", zodiakSign)
-		re, _ := regexp.Compile(form)
-		b := re.FindString(string(r))
-		return b
-	}
-	return b
-}
-
-func getLinks() []string {
-	links := []string{}
-	now := time.Now()
-	var date string = fmt.Sprintf("%d+%s+%d", now.Year(), now.Month(), now.Day())
-	googleUrl := fmt.Sprint("https://www.google.com/search?q=%D0%B3%D0%BE%D1%80%D0%BE%D1%81%D0%BA%D0%BE%D0%BF+")
-	googleUrll := fmt.Sprint("&oq=%D0%B3%D0%BE%D1%80%D0%BE%D1%81%D0%BA%D0%BE%D0%BF+02+09+2022&aqs=chrome..69i57j0i546l5.17391j0j7&sourceid=chrome&ie=UTF-8")
-	urlAddr := fmt.Sprintf("%s%s%s", googleUrl, date, googleUrll)
-
-	resp, err := http.Get(urlAddr)
+func getForecast(n, i string, c chan string, wg *sync.WaitGroup) {
+	resp, err := http.Get(fmt.Sprintf("https://horo.mail.ru/prediction/%s/today/", i))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Не удалось подключиться к серверу.", err)
 	}
-	defer resp.Body.Close()
 
-	r, _ := io.ReadAll(resp.Body)
-	re, _ := regexp.Compile("<a href=\"/url(.*?)\"")
-	a := re.FindAllString(string(r), -1)
-	re, _ = regexp.Compile("https://(.*?)&")
-	for _, i := range a {
-		linkFormat := re.FindString(i)
-		if !strings.Contains(linkFormat, "google") {
-			links = append(links, strings.SplitN(linkFormat, "&", -1)[0])
-		}
-	}
-	return links
-}
-
-func formatText(b string) string {
-	re := regexp.MustCompile(`&nbsp;`)
-	b = re.ReplaceAllString(b, " ")
-	re = regexp.MustCompile(`[<>a-zA-Z0-9]`)
-	b = re.ReplaceAllString(b, "")
-	b = strings.Replace(b, "/", "", 1)
-	b = strings.TrimRight(b, "/\n")
-	fmt.Println(b)
-	return b
-
+	html, _ := io.ReadAll(resp.Body)
+	re := regexp.MustCompile(`<p>(.*?)</p>`)
+	reply := re.FindAllString(string(html), -1)
+	re = regexp.MustCompile(`(<p>)|</p>`)
+	forecast := re.ReplaceAllString(fmt.Sprintf("%s\n\n%s\n%s", n, reply[0], reply[1]), "")
+	c <- forecast
+	wg.Done()
 }
