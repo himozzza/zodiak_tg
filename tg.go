@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("507849468:AAFpYe6fbKFFGU7qmbasK58PcqrQpRySqYE")
+	bot, err := tgbotapi.NewBotAPI("TOKEN")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -76,6 +76,8 @@ func getForecast(n, i string, c chan string, wg *sync.WaitGroup) {
 	reply := re.FindAllString(string(html), -1)
 	re = regexp.MustCompile(`(<p>)|</p>`)
 	forecast := re.ReplaceAllString(fmt.Sprintf("%s\n\n%s\n%s", n, reply[0], reply[1]), "")
+	re = regexp.MustCompile(`&(.*);`)
+	forecast = re.ReplaceAllString(forecast, " ")
 	c <- forecast
 	wg.Done()
 }
