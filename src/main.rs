@@ -2,13 +2,13 @@ use teloxide::prelude::*;
 use std::collections::HashMap;
 use regex::Regex;
 
-
+#d.d.d.d.d
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
     log::info!("Starting throw dice bot...");
     let bot = Bot::new("TOKEN");
-    #d.d.d.d.d
+
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
         let zodiak_signs: HashMap<&str, &str> = HashMap::from([
             ("овен", "aries"),
