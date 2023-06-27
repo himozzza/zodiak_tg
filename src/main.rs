@@ -6,7 +6,7 @@ use regex::Regex;
 async fn main() {
     pretty_env_logger::init();
     log::info!("Starting throw dice bot...");
-    let bot = Bot::new("TOKEN");
+    let bot = Bot::from_env();
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
         let zodiak_signs: HashMap<&str, &str> = HashMap::from([
