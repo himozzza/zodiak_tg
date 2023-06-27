@@ -2,7 +2,6 @@ use teloxide::prelude::*;
 use std::collections::HashMap;
 use regex::Regex;
 
-#d.d.d.d.d
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
