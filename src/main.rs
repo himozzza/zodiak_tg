@@ -1,7 +1,7 @@
 use teloxide::prelude::*;
 use std::collections::HashMap;
-use regex::Regex;
-
+use regex::Regex
+    
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
@@ -57,4 +57,5 @@ async fn prepair_msg(msg: &str) -> String {
                       .replace(",", "")
                       .replace(" ", "")
                       .to_string()
+    #ddddddd
 }
