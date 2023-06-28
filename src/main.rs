@@ -55,10 +55,5 @@ async fn get_forecast(r: &str) -> String {
 async fn prepair_msg(msg: &str) -> String {
     let re: Regex = Regex::new(r"[-+<>=\ /.?!@$;:0-9\{\}\]\[*]").unwrap();
     let s = re.replace_all(&msg, "").to_lowercase().to_owned();
-    // msg.to_lowercase().replace(".", "")
-    //                   .replace(",", "")
-    //                   .replace(" ", "")
-    //                   .to_string()
-    // #ddddddd
     s
 }
