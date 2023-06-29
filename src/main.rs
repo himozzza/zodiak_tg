@@ -53,7 +53,15 @@ async fn get_forecast(r: &str) -> String {
 }
 
 async fn prepair_msg(msg: &str) -> String {
-    let re: Regex = Regex::new(r"[-+<>=\ /.?!@$;:0-9\{\}\]\[*]").unwrap();
-    let s = re.replace_all(&msg, "").to_lowercase().to_owned();
-    s
+    let mut message: Vec<&str> = Vec::new();
+    let re: Regex = Regex::new(r"[а-яА-Я]").unwrap();
+    let r: regex::CaptureMatches<'_, '_> = re.captures_iter(msg);
+    for i in r.into_iter() {
+        for k in i.iter() {
+            message.push(k.unwrap().as_str())
+        }
+    }
+    // let re: Regex = Regex::new(r"[-+<>=\ /.?!@$;:0-9\{\}\]\[*]").unwrap();
+    // let s = re.replace_all(&msg, "").to_lowercase().to_owned();
+    message.join("").to_lowercase()
 }
