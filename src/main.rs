@@ -23,6 +23,12 @@ async fn main() {
             ("водолей",  "aquarius"),
             ("рыбы",     "pisces"),
         ]);
+            let re = Regex::new("[0-9]{2}.[0-9]{2}.[0-9]{4}").unwrap();
+            if re.is_match(msg.text().unwrap()) {
+                let (arkan_one, arkan_two) = arkan(msg.text().unwrap().to_string()).await;
+                let s: String = format!("Ваши арканы:\n1. {}.\n2. {}.", arkan_one, arkan_two);
+                bot.send_message(msg.chat.id, s).await?;
+            }
             let msg_str: String = prepair_msg(msg.text().unwrap()).await;
 
             if zodiak_signs.contains_key(&msg_str.as_str()) {
@@ -64,4 +70,23 @@ async fn prepair_msg(msg: &str) -> String {
     // let re: Regex = Regex::new(r"[-+<>=\ /.?!@$;:0-9\{\}\]\[*]").unwrap();
     // let s = re.replace_all(&msg, "").to_lowercase().to_owned();
     message.join("").to_lowercase()
+}
+
+async fn arkan(msg: String) -> (String, String) {
+    let arkan_array: [&str; 22] = ["Маг", "Верховная жрица", "Императрица", "Император", "Первосвященник", "Влюбленные", "Колесница", "Сила", "Отшельник", "Колесо фортуны", "Справедливость", "Повешенный", "Смерть", "Умеренность", "Дьявол", "Башня", "Звезда", "Луна", "Солнце", "Суд", "Мир", "Шут"];
+    let date_raw = msg.replace(".", "");
+    let mut date_sum: usize = 0;
+    for i in date_raw.chars() {
+        date_sum += i.to_string().parse::<usize>().unwrap();
+    }
+    let mut arkan_one_raw = date_raw[0..2].to_string().parse::<usize>().unwrap();
+    if arkan_one_raw > 22 {
+        arkan_one_raw -= arkan_one_raw - 22
+    }
+    if date_sum > 22 {
+        date_sum = &date_sum - 22
+    }
+    let arkan_one: &str = arkan_array[arkan_one_raw - 1];
+    let arkan_two: &str = arkan_array[date_sum - 1];
+    (arkan_one.to_string(), arkan_two.to_string())
 }
