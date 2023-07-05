@@ -3,7 +3,7 @@ use regex::Regex;
 
 pub mod forecast;
 pub mod arkan;
-    
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
@@ -11,18 +11,18 @@ async fn main() {
     let bot = Bot::from_env();
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-            let re: Regex = Regex::new("[0-3]{0,1}[0-9]{1}.[0-1]{0,1}[0-2]{1}.[0-9]{4}").unwrap();
-            if re.is_match(msg.text().unwrap()) {
-                    let (arkan_one, arkan_two) = arkan::arkan(msg.text().unwrap().to_string()).await;
-                    let s: String = format!("Ваши арканы:\n1. {}.\n2. {}.", arkan_one, arkan_two);
-                    bot.send_message(msg.chat.id, s).await?;
-                
-            } else {
-                let q: String = forecast::get_forecast(msg.text().unwrap().to_string()).await;
-                bot.send_message(msg.chat.id, q).await?;
-            }
-            Ok(())
-    })
+        let re = Regex::new("[0-3]{0,1}[0-9]{1}.[0-1]{0,1}[0-2]{1}.[0-9]{4}").unwrap();
+        let re_two = Regex::new("[а-яА-Я]*").unwrap();
+        let q = match msg.text().unwrap().to_string() {
+            x if re.is_match(&x.as_str()) => arkan::arkan(x.to_string()).await,
+            x if re_two.is_match(x.as_str()) => forecast::get_forecast(x.to_string()).await,
+            _ => todo!(),
+        };
+
+        bot.send_message(msg.chat.id, q).await?;
+        
+        Ok(())
+        })
     .await;
 }
 

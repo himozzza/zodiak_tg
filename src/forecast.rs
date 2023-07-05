@@ -17,10 +17,10 @@ pub(crate) async fn get_forecast(msg: String) -> String {
         ("рыбы",     "pisces"),
     ]);
 
-    let msg_str: String = prepair_msg(msg).await;
+    let msg_str: String = prepair_msg(msg.to_string()).await;
     let mut horoscope: String = String::new();
     if zodiak_signs.contains_key(msg_str.as_str()) {
-        let re: Regex = Regex::new("<p>.*[\n\r]*.*</p>").unwrap();
+        let re: Regex = Regex::new("[а-яА-Я]*").unwrap();
         let resp: reqwest::Response = reqwest::get(format!("https://horo.mail.ru/prediction/{}/today/", zodiak_signs[&msg_str.as_str()]))
                                                                 .await.expect("Error! Connection failed.");
     

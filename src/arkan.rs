@@ -1,4 +1,4 @@
-pub(crate) async fn arkan(msg: String) -> (String, String) {
+pub(crate) async fn arkan(msg: String) -> String {
     let mut arkan_one: String = String::new();
     let mut arkan_two: String = String::new();
     let verify_date: Vec<usize> = msg.split(".").map(|f| f.parse::<usize>().unwrap()).collect();
@@ -20,5 +20,5 @@ pub(crate) async fn arkan(msg: String) -> (String, String) {
         arkan_two = arkan_array[arkan_two_raw - 1].to_string();
 
     }
-    (arkan_one.to_string(), arkan_two.to_string())
+    format!("Ваши арканы:\n1. {}.\n2. {}.", arkan_one.to_string(), arkan_two.to_string())
 }
