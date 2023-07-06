@@ -18,7 +18,7 @@ async fn main() {
             x if Regex::new(".*[а-яА-Я].*").unwrap()
                                 .is_match(x.as_str()) => 
                                     forecast::get_forecast(x.to_string()).await,
-            _ => todo!(),
+            _ => String::from("Возможно Вы допустили ошибку."),
         };
 
         bot.send_message(msg.chat.id, answer).await?;
