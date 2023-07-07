@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 pub(crate) async fn arkan(msg: String) -> String {
     let verify_date: Vec<usize> = msg.split(".").map(|f| f.parse::<usize>().unwrap()).collect();
     let month: usize = if verify_date[0] % 2 == 0 {
@@ -5,8 +6,8 @@ pub(crate) async fn arkan(msg: String) -> String {
     } else {
         31
     };
-
-    if verify_date[0] > 0 && verify_date[0] <= month && verify_date[1] > 0 &&  verify_date[1] <= 12 && verify_date[2] < 6665 {
+    let year: usize = Local::now().year().try_into().unwrap();
+    if verify_date[0] > 0 && verify_date[0] <= month && verify_date[1] > 0 &&  verify_date[1] <= 12 && verify_date[2] > year - 100 && verify_date[2] <= year + 1 {
         let arkan_array: [&str; 22] = ["Маг", "Верховная жрица", "Императрица", "Император", "Верховный жрец", "Влюбленные", "Колесница", "Правосудие", "Отшельник", "Колесо фортуны", "Сила", "Повешенный", "Смерть", "Умеренность", "Дьявол", "Башня", "Звезда", "Луна", "Солнце", "Суд", "Мир", "Шут"];
         let date_raw: String = msg.replace(".", "");
         let mut arkan_two_raw: usize = 0;
