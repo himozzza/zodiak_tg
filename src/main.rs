@@ -11,7 +11,7 @@ async fn main() {
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
         let answer: String = match msg.text().unwrap().to_string() {
-            x if Regex::new("[0-9]{1,2}.[0-9]{0,1}[0-9]{1}.[0-9]{4}")
+            x if Regex::new("[0-9]{0,1}[0-9]{1}.[0-9]{0,1}[0-9]{1}.[0-9]{1,4}")
                                 .unwrap().is_match(&x.as_str()) => 
                                     arkan::arkan(x.to_string()).await,
             x if Regex::new(".*[а-яА-Я].*").unwrap()
