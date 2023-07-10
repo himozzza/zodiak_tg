@@ -11,7 +11,7 @@ pub mod db_update;
 fn main() {
     thread::spawn(||{
         loop {
-            if Local::now().hour().to_string() == "0".to_string() {
+            if Local::now().hour().to_string() == "21".to_string() {
                 db_update::db_update();
                 thread::sleep(time::Duration::from_secs(3600));
             } else {
