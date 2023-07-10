@@ -9,8 +9,9 @@ edition = "2021"
 teloxide = { version = "0.12.2", features = ["macros"] }
 log = "0.4.19"
 pretty_env_logger = "0.5.0"
-tokio = { version = "1.28.2", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.11.18", features = ["blocking"] }
-regex = { version = "1.8.4" }
+regex = { version = "1.9.1" }
 openssl = { version = "0.10.55", features = ["vendored"] }
 chrono = { version = "0.4.26" }
+postgres = { version = "0.19.5" }
